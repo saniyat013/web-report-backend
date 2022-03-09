@@ -3,6 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Models\Division;
+use App\Models\District;
+use App\Models\Report;
+use App\Models\Unit;
+
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AuthController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,6 +22,51 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::get('/div-rep/{name}', function ($name) {
+//     $division = Division::where('name', 'like', '%' . $name)->get()->first();
+//     return $division->reports;
+// });
+
+// Route::get('/dis-rep/{name}', function ($name) {
+//     $district = District::where('name', 'like', '%' . $name)->get()->first();
+//     return $district->reports;
+// });
+
+// Route::get('/unit-rep/{name}', function ($name) {
+//     $unit = Unit::where('name', 'like', '%' . $name)->get()->first();
+//     return $unit->reports;
+// });
+
+// Route::resource('reports', ReportController::class);
+
+// Public Routes
+Route::post('/search-user', [AuthController::class, 'search']);
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+Route::get('/reports', [ReportController::class, 'index']);
+Route::get('/reports/{id}', [ReportController::class, 'show']);
+Route::get('/reports/search/{id}', [ReportController::class, 'search']);
+
+Route::get('/divisions', function () {
+    return Division::all();
+});
+
+Route::get('/districts-division/{id}', function ($id) {
+    $division = Division::find($id);
+    return $division->districts;
+});
+
+Route::get('/units-district/{id}', function ($id) {
+    $district = District::find($id);
+    return $district->units;
+});
+
+// Protected Routes
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::post('/reports', [ReportController::class, 'store']);
+    Route::put('/reports/{id}', [ReportController::class, 'update']);
+    Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
