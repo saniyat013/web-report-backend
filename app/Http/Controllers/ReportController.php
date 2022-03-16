@@ -25,15 +25,54 @@ class ReportController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        $fields = $request->validate([
             'division_id' => 'required',
             'district_id' => 'required',
             'unit_id' => 'required',
+            'created_at' => 'required',
             'total_work' => 'required',
-            'total_id' => 'required'
+            'total_id' => 'required',
+            'comment' => 'string'
         ]);
 
-        return Report::create($request->all());
+        $duplicate_value = Report::select('id')
+            ->whereDate('created_at', date($request['created_at']))
+            ->where(
+                'division_id',
+                $request['division_id']
+            )
+            ->where(
+                'district_id',
+                $request['district_id']
+            )
+            ->where(
+                'unit_id',
+                $request['unit_id']
+            )
+            ->value('id');
+
+        if ($duplicate_value != null) {
+            $report = Report::find($duplicate_value);
+            $report->update([
+                'total_work' => $fields['total_work'],
+                'total_id' => $fields['total_id'],
+                'comment' => $fields['comment']
+            ]);
+
+            return $report;
+        } else {
+            $report = Report::create([
+                'division_id' => $fields['division_id'],
+                'district_id' => $fields['district_id'],
+                'unit_id' => $fields['unit_id'],
+                'created_at' => $fields['created_at'],
+                'total_work' => $fields['total_work'],
+                'total_id' => $fields['total_id'],
+                'comment' => $fields['comment']
+            ]);
+
+            return $report;
+        }
     }
 
     /**

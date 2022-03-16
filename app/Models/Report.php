@@ -14,8 +14,10 @@ class Report extends Model
         'unit_id',
         'total_work',
         'total_id',
-        'comment'
+        'comment',
+        'created_at'
     ];
+
     public function division()
     {
         return $this->belongsTo(Division::class);

@@ -10,6 +10,7 @@ use App\Models\Unit;
 
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DataController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +68,9 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{id}', [ReportController::class, 'update']);
     Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+
+    Route::get('/members/{unitId}', [DataController::class, 'getMembersByUnit']);
+    Route::post('/members/{unitId}', [DataController::class, 'updateMembersByUnit']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 });

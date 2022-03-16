@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use DB;
+use App\Models\District;
+use App\Models\Division;
+use App\Models\Unit;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
+
 
 class AuthController extends Controller
 {
@@ -15,7 +20,7 @@ class AuthController extends Controller
             'name' => 'required|string',
             'email' => 'required|string|unique:users,email',
             'password' => 'required|string|confirmed',
-            'mobile' => 'string',
+            'mobile' => 'required|string',
             'division' => 'required|integer',
             'district' => 'required|integer',
             'unit' => 'required|integer',
@@ -62,6 +67,11 @@ class AuthController extends Controller
 
         $response = [
             'user' => $user,
+            'userData' => [
+                'division' => Division::where('id', $user->division)->value('name'),
+                'district' => District::where('id', $user->district)->value('name'),
+                'unit' => Unit::where('id', $user->unit)->value('name'),
+            ],
             'token' => $token,
         ];
 

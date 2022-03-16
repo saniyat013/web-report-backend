@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Unit extends Model
 {
     // use HasFactory
+    protected $fillable = [
+        'members'
+    ];
+
     public function district()
     {
         return $this->belongsTo(District::class);

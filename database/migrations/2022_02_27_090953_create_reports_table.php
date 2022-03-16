@@ -21,7 +21,7 @@ class CreateReportsTable extends Migration
 
             $table->integer('total_work');
             $table->integer('total_id');
-            $table->string('comment');
+            $table->string('comment')->default('');
             $table->timestamps();
 
 

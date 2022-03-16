@@ -16,39 +16,39 @@ class DivisionsSeeder extends Seeder
     {
         DB::table('divisions')->insert(array(
             array(
-                'id' => 2,
+                // 'id' => 2,
                 'name' => 'Dhaka'
             ),
             array(
-                'id' => 3,
+                // 'id' => 3,
                 'name' => 'Dhaka City'
             ),
             array(
-                'id' => 1,
+                // 'id' => 1,
                 'name' => 'Rajshahi'
             ),
             array(
-                'id' => 4,
+                // 'id' => 4,
                 'name' => 'Sylhet'
             ),
             array(
-                'id' => 5,
+                // 'id' => 5,
                 'name' => 'Khulna'
             ),
             array(
-                'id' => 6,
+                // 'id' => 6,
                 'name' => 'Rangpur'
             ),
             array(
-                'id' => 7,
+                // 'id' => 7,
                 'name' => 'Barisal'
             ),
             array(
-                'id' => 8,
+                // 'id' => 8,
                 'name' => 'Chattogram'
             ),
             array(
-                'id' => 9,
+                // 'id' => 9,
                 'name' => 'Mymensingh'
             )
         ));
