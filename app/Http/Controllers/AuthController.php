@@ -75,7 +75,7 @@ class AuthController extends Controller
             'token' => $token,
         ];
 
-        return response($response, 201);
+        return response($response, 200);
     }
 
     public function logout(Request $request)
@@ -99,6 +99,46 @@ class AuthController extends Controller
             'user' => $user
         ];
 
-        return response($response, 201);
+        return response($response, 200);
+    }
+
+    public function getUnverifiedUsers()
+    {
+        $user = User::where('verified', false)
+            ->select('id as ID', 'name as Name', 'email as Email', 'mobile as Mobile', 'division as Division', 'district as District', 'unit as Unit')
+            ->get();
+
+        foreach ($user as $singleUser) {
+            $singleUser->Division = Division::where('id', $singleUser->Division)->value('name');
+            $singleUser->District = District::where('id', $singleUser->District)->value('name');
+            $singleUser->Unit = Unit::where('id', $singleUser->Unit)->value('name');
+        }
+
+        $response = [
+            'user' => $user,
+        ];
+
+        return response($response, 200);
+    }
+
+    public function verifyUser(Request $request)
+    {
+        $fields = $request->validate([
+            'id' => 'required|integer'
+        ]);
+
+        $user = User::find($fields['id']);
+
+        if ($user != null) {
+            $user->update([
+                'verified' => true,
+            ]);
+        } else {
+            return [
+                'message' => 'User not found'
+            ];
+        }
+
+        return true;
     }
 }

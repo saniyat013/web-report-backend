@@ -2,8 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\District;
+use App\Models\Division;
+use DB;
 use Illuminate\Http\Request;
 use App\Models\Report;
+use App\Models\User;
+use DateTime;
+use Illuminate\Support\Facades\Date;
+use stdClass;
+
+use function PHPSTORM_META\map;
 
 class ReportController extends Controller
 {
@@ -15,6 +24,191 @@ class ReportController extends Controller
     public function index()
     {
         return Report::all();
+    }
+
+    public function reportByDivision(Request $request)
+    {
+        $reportByDivision = DB::table('reports')
+            ->whereBetween('created_at', [$request['dateFrom'], $request['dateTo']])
+            ->selectRaw('sum(total_work) as totalWork')
+            ->selectRaw('division_id')
+            ->groupBy('division_id')
+            ->get();
+
+        foreach ($reportByDivision as $key => $item) {
+            $reportByDivision[$key]->division = Division::select('name')->where('id',  $reportByDivision[$key]->division_id)->value('name');
+        }
+
+        return $reportByDivision;
+    }
+
+    public function reportBySingleDivision(Request $request)
+    {
+        $reportBySingleDivision = DB::table('reports')
+            ->whereBetween('created_at', [$request['dateFrom'], $request['dateTo']])
+            ->where('division_id', $request['divisionId'])
+            ->selectRaw('sum(total_work) as totalWork')
+            ->selectRaw('district_id')
+            ->groupBy('district_id')
+            ->get();
+
+        foreach ($reportBySingleDivision as $key => $item) {
+            $reportBySingleDivision[$key]->district = District::select('name')->where('id',  $reportBySingleDivision[$key]->district_id)->value('name');
+        }
+
+        return $reportBySingleDivision;
+    }
+
+    public function totalReport(Request $request)
+    {
+        $startDate = explode("T", $request['dateFrom'])[0];
+        $endDate = explode("T", $request['dateTo'])[0];
+
+        $reportAll = DB::table('reports')
+            ->whereBetween(
+                'created_at',
+                [$startDate . " 00:00:00", $endDate . " 23:59:59"]
+            )
+            ->selectRaw('sum(total_work) as totalWork')
+            ->selectRaw("(DATE_FORMAT(created_at, '%d-%m-%Y')) as date")
+            ->orderBy('created_at')
+            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%d-%m-%Y')"))
+            ->get();
+
+        return $reportAll;
+    }
+
+    public function totalReportByDivision(Request $request)
+    {
+        $reportAllByDivision = DB::table('reports')
+            ->whereBetween('created_at', [$request['dateFrom'], $request['dateTo']])
+            ->where('division_id', $request['divisionId'])
+            ->selectRaw('sum(total_work) as totalWork')
+            ->selectRaw("(DATE_FORMAT(created_at, '%d-%m-%Y')) as date")
+            ->orderBy('created_at')
+            ->groupBy(DB::raw("DATE_FORMAT(created_at, '%d-%m-%Y')"))
+            ->get();
+
+        return $reportAllByDivision;
+    }
+
+    public function totalShortReportToday(Request $request)
+    {
+        $dateToday = explode("T", $request['dateToday'])[0];
+
+        $divisions = Division::all();
+
+        foreach ($divisions as $division) {
+            $totalMemberByDivision = 0;
+
+            $districts = $division->districts()->get();
+
+            foreach ($districts as $district) {
+                $units = $district->units()->get();
+
+                foreach ($units as $unit) {
+                    $totalMemberByDivision += (int)$unit->members;
+                }
+            }
+
+            $totalWorkToday = Report::where('division_id', $division->id)
+                ->whereBetween(
+                    'created_at',
+                    [$dateToday . " 00:00:00", $dateToday . " 23:59:59"]
+                )
+                ->selectRaw('sum(total_work) as totalWork')
+                ->selectRaw('sum(total_id) as totalId')
+                ->get();
+
+            $division->totalMember = $totalMemberByDivision;
+            $division->totalId = (int)$totalWorkToday[0]->totalId;
+            $division->totalWorkToday = (int)$totalWorkToday[0]->totalWork;
+        }
+
+        return $divisions;
+    }
+
+    public function totalDetailedReportToday(Request $request)
+    {
+        $dateToday = explode("T", $request['dateToday'])[0];
+
+        $divisions = Division::all();
+
+        foreach ($divisions as $division) {
+
+            $districts = $division->districts()->get();
+
+            foreach ($districts as $district) {
+                $totalMemberByDistrict = 0;
+
+                $units = $district->units()->get();
+
+                foreach ($units as $unit) {
+                    $totalMemberByDistrict += (int)$unit->members;
+                }
+
+                $district->totalMember = $totalMemberByDistrict;
+
+                $totalWorkToday = Report::where('district_id', $district->id)
+                    ->whereBetween(
+                        'created_at',
+                        [$dateToday . " 00:00:00", $dateToday . " 23:59:59"]
+                    )
+                    ->selectRaw('sum(total_work) as totalWork')
+                    ->selectRaw('sum(total_id) as totalId')
+                    ->get();
+
+                $district->totalMember = $totalMemberByDistrict;
+                $district->totalId = (int)$totalWorkToday[0]->totalId;
+                $district->totalWorkToday = (int)$totalWorkToday[0]->totalWork;
+            }
+
+            $division->districts = $districts;
+        }
+
+        return $divisions;
+    }
+
+    public function reportNotSentToday(Request $request)
+    {
+        $dateToday = explode("T", $request['dateToday'])[0];
+
+        $divisions = Division::all();
+
+        foreach ($divisions as $division) {
+            $districts = $division->districts()->get();
+
+            foreach ($districts as $district) {
+                $units = $district->units()->get();
+
+                foreach ($units as $unit) {
+
+                    $reportToday = $unit->reports()->whereBetween(
+                        'created_at',
+                        [$dateToday . " 00:00:00", $dateToday . " 23:59:59"]
+                    )
+                        ->get();
+
+                    if (count($reportToday) == 0) {
+
+                        $unitUser = User::where('unit', $unit->id)
+                            ->select('name', 'mobile')
+                            ->get();
+                        // echo $unitUser;
+                        if (count($unitUser) !== 0) {
+                            $unitUser[0]->unitName = $unit->name;
+                            $userList[] = $unitUser[0];
+                        } else {
+                            $blankUnit = new stdClass();
+                            $blankUnit->unitName = $unit->name;
+                            $userList[] = $blankUnit;
+                        }
+                    }
+                }
+            }
+        }
+
+        return $userList;
     }
 
     /**

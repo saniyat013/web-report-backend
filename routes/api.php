@@ -45,10 +45,6 @@ Route::post('/search-user', [AuthController::class, 'search']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get('/reports', [ReportController::class, 'index']);
-Route::get('/reports/{id}', [ReportController::class, 'show']);
-Route::get('/reports/search/{id}', [ReportController::class, 'search']);
-
 Route::get('/divisions', function () {
     return Division::all();
 });
@@ -65,9 +61,25 @@ Route::get('/units-district/{id}', function ($id) {
 
 // Protected Routes
 Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::get('/new-users', [AuthController::class, 'getUnverifiedUsers']);
+    Route::post('/verify-user', [AuthController::class, 'verifyUser']);
+
     Route::post('/reports', [ReportController::class, 'store']);
     Route::put('/reports/{id}', [ReportController::class, 'update']);
     Route::delete('/reports/{id}', [ReportController::class, 'destroy']);
+
+    Route::get('/reports', [ReportController::class, 'index']);
+    Route::get('/reports/{id}', [ReportController::class, 'show']);
+    Route::get('/reports/search/{id}', [ReportController::class, 'search']);
+
+    Route::get('/report-division', [ReportController::class, 'reportByDivision']);
+    Route::get('/report-division-single', [ReportController::class, 'reportBySingleDivision']);
+    Route::get('/report-total', [ReportController::class, 'totalReport']);
+    Route::get('/report-total-division', [ReportController::class, 'totalReportByDivision']);
+
+    Route::get('/report-today-short', [ReportController::class, 'totalShortReportToday']);
+    Route::get('/report-today-detailed', [ReportController::class, 'totalDetailedReportToday']);
+    Route::get('/report-not-sent', [ReportController::class, 'reportNotSentToday']);
 
     Route::get('/members/{unitId}', [DataController::class, 'getMembersByUnit']);
     Route::post('/members/{unitId}', [DataController::class, 'updateMembersByUnit']);

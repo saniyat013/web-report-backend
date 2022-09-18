@@ -17,7 +17,9 @@ class DatabaseSeeder extends Seeder
             DivisionsSeeder::class,
             DistrictsSeeder::class,
             UnitsSeeder::class,
-            ReportsSeeder::class
+            ReportsSeeder::class,
+            RolesSeeder::class,
+            UsersSeeder::class
         ]);
     }
 }
